@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="560" viewBox="0 0 560 560">
+  <!-- PLACEHOLDER: fondo oceánico de borrador. Sustituir por el fondo definitivo. -->
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a3a52"/>
+      <stop offset="0.5" stop-color="#062a40"/>
+      <stop offset="1" stop-color="#041c2d"/>
+    </linearGradient>
+  </defs>
+  <rect width="560" height="560" fill="url(#sea)"/>
+  <g fill="none" stroke="#7dd3fc" stroke-width="1.2" opacity="0.22">
+    <path d="M0 70 Q70 40 140 70 T280 70 T420 70 T560 70"/>
+    <path d="M0 150 Q70 120 140 150 T280 150 T420 150 T560 150"/>
+    <path d="M0 230 Q70 200 140 230 T280 230 T420 230 T560 230"/>
+    <path d="M0 310 Q70 280 140 310 T280 310 T420 310 T560 310"/>
+    <path d="M0 390 Q70 360 140 390 T280 390 T420 390 T560 390"/>
+    <path d="M0 470 Q70 440 140 470 T280 470 T420 470 T560 470"/>
+    <path d="M0 550 Q70 520 140 550 T280 550 T420 550 T560 550"/>
+  </g>
+  <g fill="none" stroke="#4ff0d0" stroke-width="0.8" opacity="0.14">
+    <path d="M40 0 Q70 60 40 120 T40 240 T40 360 T40 480 T40 600"/>
+    <path d="M200 0 Q230 60 200 120 T200 240 T200 360 T200 480 T200 600"/>
+    <path d="M360 0 Q390 60 360 120 T360 240 T360 360 T360 480 T360 600"/>
+    <path d="M520 0 Q550 60 520 120 T520 240 T520 360 T520 480 T520 600"/>
+  </g>
+</svg>

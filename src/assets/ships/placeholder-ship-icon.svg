@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="88" height="40" viewBox="0 0 88 40">
+  <!-- PLACEHOLDER: icono de barco para la bandeja de despliegue. -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a8e3f5"/>
+      <stop offset="1" stop-color="#275b78"/>
+    </linearGradient>
+  </defs>
+  <path d="M6 20 L24 11 L70 11 L84 20 L70 29 L24 29 Z" fill="url(#g)" stroke="#d8f6ff" stroke-width="1"/>
+  <path d="M36 11 V29 M54 11 V29 M70 11 V29" fill="none" stroke="#d8f6ff" stroke-width="0.8" opacity="0.7"/>
+  <rect x="42" y="15" width="14" height="9" rx="3" fill="#0d2b3d"/>
+  <rect x="52" y="17" width="6" height="5" rx="1.5" fill="#4ff0d0"/>
+</svg>

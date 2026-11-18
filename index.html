@@ -1,1 +1,206 @@
-prueba doc
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#04121e" />
+    <title>Battleship // Tactical Command</title>
+    <link rel="stylesheet" href="./src/css/style.css" />
+  </head>
+  <body>
+    <!-- Fondo placeholder: sustituye estos SVG/CSS por tus fondos definitivos -->
+    <div class="ocean" aria-hidden="true">
+      <div class="ocean__layer ocean__layer--deep"></div>
+      <div class="ocean__layer ocean__layer--waves"></div>
+      <div class="ocean__layer ocean__layer--caustics"></div>
+      <div class="ocean__glow"></div>
+    </div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand__emblem">
+            <img src="./src/assets/ui/placeholder-emblem.svg" alt="" />
+          </div>
+          <div>
+            <h1 class="brand__title" data-text="BATTLESHIP">BATTLESHIP</h1>
+            <p class="brand__subtitle">TACTICAL COMMAND <span>//</span> v1.0</p>
+          </div>
+        </div>
+
+        <div class="topbar__status">
+          <span class="status-chip"><i></i> SISTEMAS ONLINE</span>
+          <span class="status-chip status-chip--dim" id="mode-label">CAMPAÑA</span>
+        </div>
+
+        <div class="topbar__actions">
+          <button id="sound-toggle" class="icon-btn" type="button" aria-label="Silenciar" title="Sonido">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9v6h4l5 4V5L8 9H4z" />
+              <path class="icon-btn__wave" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="stage">
+        <!-- ===================== PANTALLA DE DESPLIEGUE ===================== -->
+        <section id="screen-setup" class="screen screen--active">
+          <div class="setup-grid">
+            <div class="panel setup-panel">
+              <header class="panel__head">
+                <span class="panel__tag">SALA DE OPERACIONES</span>
+                <h2>Preparar batalla</h2>
+                <p>Configura la partida y despliega tu flota antes del combate.</p>
+              </header>
+
+              <div class="mode-select" role="group" aria-label="Modo de juego">
+                <button class="mode-card is-active" type="button" data-mode="cpu">
+                  <span class="mode-card__icon">◈</span>
+                  <span class="mode-card__text">
+                    <strong>Campaña</strong>
+                    <small>Contra la CPU táctica</small>
+                  </span>
+                </button>
+                <button class="mode-card" type="button" data-mode="pvp">
+                  <span class="mode-card__icon">⚔</span>
+                  <span class="mode-card__text">
+                    <strong>Versus local</strong>
+                    <small>Dos jugadores, pantalla oculta</small>
+                  </span>
+                </button>
+              </div>
+
+              <div class="names-row is-hidden">
+                <label>Jugador 1 <input id="name-p1" type="text" maxlength="14" value="Jugador 1" /></label>
+                <label>Jugador 2 <input id="name-p2" type="text" maxlength="14" value="Jugador 2" /></label>
+              </div>
+
+              <div class="fleet-section">
+                <div class="section-heading">
+                  <h3>Flota desplegable</h3>
+                  <span>Arrastra o selecciona</span>
+                </div>
+                <div id="ship-tray" class="ship-tray"></div>
+              </div>
+
+              <div class="setup-actions">
+                <button id="btn-random" class="btn btn--ghost" type="button">Despliegue aleatorio</button>
+                <button id="btn-rotate" class="btn btn--ghost" type="button">
+                  <span class="rotate-icon">⟳</span>
+                  <span class="rotate-label">Horizontal</span>
+                </button>
+                <button id="btn-start" class="btn btn--primary btn--launch" type="button" disabled>
+                  Iniciar batalla <span>➤</span>
+                </button>
+              </div>
+
+              <p id="setup-hint" class="hint"></p>
+            </div>
+
+            <div class="panel placement-panel">
+              <header class="panel__head panel__head--row">
+                <div>
+                  <span class="panel__tag">ZONA DE DESPLIEGUE</span>
+                  <h2>Tu flota</h2>
+                </div>
+                <div class="coord-key">A–J <span>/</span> 1–10</div>
+              </header>
+              <div id="placement-board" class="board-frame board-frame--setup"></div>
+              <div class="legend">
+                <span><i class="legend__swatch legend__swatch--ship"></i> Barco</span>
+                <span><i class="legend__swatch legend__swatch--ok"></i> Válido</span>
+                <span><i class="legend__swatch legend__swatch--bad"></i> Bloqueado</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================== PANTALLA DE BATALLA ===================== -->
+        <section id="screen-game" class="screen">
+          <div class="battle-hud">
+            <div class="hud-side">
+              <span class="hud-side__label">COMANDANTE</span>
+              <strong id="own-title">Jugador 1</strong>
+              <div class="health"><span>NAVES</span><b id="own-health">5/5</b></div>
+            </div>
+
+            <div class="hud-center">
+              <div id="turn-indicator" class="turn-indicator">
+                <span class="turn-indicator__dot"></span>
+                <span id="turn-label">TU TURNO</span>
+              </div>
+              <span id="turn-name" class="turn-name">Jugador 1</span>
+              <span id="round" class="round">RONDA 01</span>
+            </div>
+
+            <div class="hud-side hud-side--right">
+              <span class="hud-side__label">OBJETIVO</span>
+              <strong id="enemy-title">CPU</strong>
+              <div class="health"><span>NAVES</span><b id="enemy-health">5/5</b></div>
+            </div>
+          </div>
+
+          <div class="battle-grid">
+            <div id="panel-own" class="panel board-panel">
+              <header class="panel__head panel__head--row">
+                <div>
+                  <span class="panel__tag">FLOTA PROPIA</span>
+                  <h2 id="own-title-board">Tu escuadra</h2>
+                </div>
+                <div id="own-pips" class="fleet-pips"></div>
+              </header>
+              <div id="board-own" class="board-frame"></div>
+            </div>
+
+            <div class="center-rail">
+              <div class="vs-badge"><span>VS</span></div>
+              <div class="radar" aria-hidden="true">
+                <div class="radar__sweep"></div>
+                <div class="radar__blip radar__blip--1"></div>
+                <div class="radar__blip radar__blip--2"></div>
+                <div class="radar__blip radar__blip--3"></div>
+              </div>
+              <div class="combat-log">
+                <span class="combat-log__title">REGISTRO DE COMBATE</span>
+                <div id="combat-log"></div>
+              </div>
+            </div>
+
+            <div id="panel-enemy" class="panel board-panel board-panel--enemy">
+              <header class="panel__head panel__head--row">
+                <div>
+                  <span class="panel__tag panel__tag--enemy">AGUA ENEMIGA</span>
+                  <h2 id="enemy-title-board">Escuadra rival</h2>
+                </div>
+                <div id="enemy-pips" class="fleet-pips"></div>
+              </header>
+              <div id="board-enemy" class="board-frame board-frame--enemy"></div>
+              <div class="coord-strip">
+                <span id="coord-readout">--</span>
+                <span class="coord-strip__hint">CLICK PARA DISPARAR</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="battle-footer">
+            <button id="btn-restart" class="btn btn--ghost" type="button">↺ Reiniciar</button>
+            <p id="battle-hint" class="hint">Haz clic en una coordenada enemiga para abrir fuego.</p>
+            <span class="battle-footer__tag">ENCENDIDO · SEGURO · LISTO</span>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast-area" class="toast-area" aria-live="polite"></div>
+    <div id="fx-layer" class="fx-layer" aria-hidden="true"></div>
+
+    <div id="overlay" class="overlay is-hidden">
+      <div id="overlay-card" class="overlay__card"></div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
