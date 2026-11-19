@@ -29,18 +29,26 @@ npm test       # 20 pruebas unitarias (Jest + Babel)
 - Modo **Campaña** (contra CPU táctica) y **Versus local** con pantalla de entrega de dispositivo.
 - Colocación de barcos por **arrastrar y soltar** o seleccionando barco + clic, con rotación (`R` o botón) y vista previa válida/inválida.
 - Despliegue aleatorio de la flota.
-- Ataques animados con trazador, explosión, salpicadura, hundimiento y sacudida del panel.
+- Ataques rápidos: la casilla se marca al instante y los efectos (trazador, explosión, salpicadura) son decorativos y no bloquean el siguiente disparo.
+- Marcas permanentes: impactos con anillo rojo y fallos con la X de `images/shoot.png`.
 - Retícula de puntería con lectura de coordenadas, radar, registro de combate e indicador de turno.
 - Pantallas de victoria/derrota con confeti y estadísticas.
 - Diseño responsive y soporte para `prefers-reduced-motion`.
 
-## Sustituir los placeholders
+## Recursos visuales
 
-Los recursos visuales son de borrador y están aislados para que solo tengas que cambiar los archivos:
+Fondos y marcadores en `images/`:
 
-- `src/assets/water/placeholder-ocean.svg` → fondo del océano.
+- `images/inicio.jpg` → fondo de la pantalla de batalla.
+- `images/lobby.jpg` → fondo de la pantalla de despliegue.
+- `images/winner-optimized.jpg` → fondo de la pantalla de victoria (versión reducida de `winner.jpg`, que pesaba 12 MB; el original se conserva).
+- `images/loser.jpg` → fondo de la pantalla de derrota.
+- `images/shoot.png` → X permanente en las casillas donde no hay barco.
+
+Todavía son placeholders los recursos en `src/assets/`:
+
 - `src/assets/ships/placeholder-ship.svg` → textura aplicada a cada segmento de barco.
 - `src/assets/ships/placeholder-ship-icon.svg` → icono en la bandeja de despliegue.
 - `src/assets/ui/placeholder-emblem.svg` → emblema del encabezado.
 
-Las animaciones de los barcos viven en `src/css/style.css` (`@keyframes deploy`, `sink`, `explode`, `ripple`, etc.). Puedes reemplazarlas por sprites o secuencias de imágenes manteniendo las clases `.ship-part`, `.cell--hit`, `.cell--sunk` y `.cell--fx-sink`.
+Las animaciones de los barcos viven en `src/css/style.css` (`@keyframes deploy`, `sink`, `explode`, `ripple`, etc.). Puedes reemplazarlas por sprites o secuencias de imágenes manteniendo las clases `.ship-part`, `.cell--hit`, `.cell--miss`, `.cell--sunk` y `.cell--fx-sink`.

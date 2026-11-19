@@ -85,6 +85,23 @@ describe('Game controller', () => {
     expect(game.winner).toBe('player1');
   });
 
+  test('configura tableros con dimensiones personalizadas', () => {
+    const game = createGame();
+    game.configure({ mode: 'cpu', size: { width: 8, height: 12 } });
+    const state = game.getState();
+
+    expect(state.size).toEqual({ width: 8, height: 12 });
+    expect(state.players.player1.board).toHaveLength(12);
+    expect(state.players.player1.board[0]).toHaveLength(8);
+    expect(state.players.player2.totalShips).toBe(5);
+  });
+
+  test('limita el tamaño al rango permitido', () => {
+    const game = createGame();
+    game.configure({ size: { width: 2, height: 30 } });
+    expect(game.size).toEqual({ width: 5, height: 20 });
+  });
+
   test('en modo local se entrega el dispositivo para colocar la segunda flota', () => {
     const game = createGame();
     const handoffs = [];

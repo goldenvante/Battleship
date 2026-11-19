@@ -12,7 +12,10 @@ export const FLEET = [
 
 export const FLEET_LENGTHS = FLEET.map((ship) => ship.length);
 
-// Direcciones usadas por el tablero (colocación) y por la IA (disparos).
+// Ninguna dimensión puede ser menor que el barco más grande.
+export const MIN_BOARD_SIZE = Math.max(...FLEET_LENGTHS);
+export const MAX_BOARD_SIZE = 20;
+
 export const DIRECTIONS = [
   [0, -1], // norte
   [1, 0],  // este
@@ -20,11 +23,41 @@ export const DIRECTIONS = [
   [-1, 0], // oeste
 ];
 
-export const COLS = 'ABCDEFGHIJ';
+export const COLS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 export const coordKey = (x, y) => `${x},${y}`;
 
-export const inBounds = (x, y, size = BOARD_SIZE) =>
-  x >= 0 && y >= 0 && x < size && y < size;
+/** Acepta un número (cuadrado) o { width, height } / { cols, rows }. */
+export const normalizeSize = (size = BOARD_SIZE) => {
+  if (typeof size === 'number') return { width: size, height: size };
+  return {
+    width: Number(size?.width ?? size?.cols ?? BOARD_SIZE),
+    height: Number(size?.height ?? size?.rows ?? BOARD_SIZE),
+  };
+};
 
-export const coordLabel = (x, y) => `${COLS[x]}${y + 1}`;
+export const clampSize = (size) => {
+  const { width, height } = normalizeSize(size);
+  const clamp = (value) =>
+    Math.min(MAX_BOARD_SIZE, Math.max(MIN_BOARD_SIZE, Math.round(Number(value) || BOARD_SIZE)));
+  return { width: clamp(width), height: clamp(height) };
+};
+
+export const inBounds = (x, y, size = BOARD_SIZE) => {
+  const { width, height } = normalizeSize(size);
+  return x >= 0 && y >= 0 && x < width && y < height;
+};
+
+/** Etiquetas de columna: A, B, ... Z, AA, AB, ... */
+export function columnLabel(index) {
+  let n = index + 1;
+  let label = '';
+  while (n > 0) {
+    const rest = (n - 1) % 26;
+    label = String.fromCharCode(65 + rest) + label;
+    n = Math.floor((n - 1) / 26);
+  }
+  return label;
+}
+
+export const coordLabel = (x, y) => `${columnLabel(x)}${y + 1}`;

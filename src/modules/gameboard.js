@@ -1,17 +1,18 @@
 import createShip from './ship.js';
-import { BOARD_SIZE, DIRECTIONS, coordKey, inBounds } from './constants.js';
+import {
+  BOARD_SIZE,
+  DIRECTIONS,
+  coordKey,
+  inBounds,
+  normalizeSize,
+} from './constants.js';
 
-/**
- * Fábrica del tablero de juego.
- * Interface pública:
- *   size, board (sólo lectura), ships, missedAttacks
- *   getCell(x, y), canPlaceShip(coords), placeShip(ship, coords),
- *   placeShipsRandomly(lengths, names), receiveAttack(x, y), allShipsSunk()
- */
 export default function createGameboard(size = BOARD_SIZE) {
+  const { width, height } = normalizeSize(size);
+
   // Cada casilla: { ship, shipIndex, attacked, result }
-  const board = Array.from({ length: size }, () =>
-    Array.from({ length: size }, () => ({
+  const board = Array.from({ length: height }, () =>
+    Array.from({ length: width }, () => ({
       ship: null,
       shipIndex: null,
       attacked: false,
@@ -48,7 +49,7 @@ export default function createGameboard(size = BOARD_SIZE) {
 
     const keys = new Set();
     for (const { x, y } of coords) {
-      if (!inBounds(x, y, size)) return false;
+      if (!inBounds(x, y, { width, height })) return false;
       const key = coordKey(x, y);
       if (keys.has(key)) return false;
       keys.add(key);
@@ -94,8 +95,8 @@ export default function createGameboard(size = BOARD_SIZE) {
       while (!coords && attempts < 500) {
         attempts += 1;
         const horizontal = Math.random() < 0.5;
-        const x = Math.floor(Math.random() * (horizontal ? size - length + 1 : size));
-        const y = Math.floor(Math.random() * (horizontal ? size : size - length + 1));
+        const x = Math.floor(Math.random() * (horizontal ? width - length + 1 : width));
+        const y = Math.floor(Math.random() * (horizontal ? height : height - length + 1));
         const candidate = Array.from({ length }, (_, k) => ({
           x: horizontal ? x + k : x,
           y: horizontal ? y : y + k,
@@ -115,7 +116,7 @@ export default function createGameboard(size = BOARD_SIZE) {
    * Devuelve un objeto con el resultado para que la capa de UI pueda animarlo.
    */
   const receiveAttack = (x, y) => {
-    if (!inBounds(x, y, size)) return { result: 'invalid', x, y };
+    if (!inBounds(x, y, { width, height })) return { result: 'invalid', x, y };
 
     const cell = board[y][x];
     if (cell.attacked) {
@@ -150,8 +151,8 @@ export default function createGameboard(size = BOARD_SIZE) {
   /** Devuelve todas las coordenadas aún no disparadas (útil para la IA). */
   const availableCells = () => {
     const available = [];
-    for (let y = 0; y < size; y += 1) {
-      for (let x = 0; x < size; x += 1) {
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
         if (!board[y][x].attacked) available.push({ x, y });
       }
     }
@@ -160,7 +161,13 @@ export default function createGameboard(size = BOARD_SIZE) {
 
   return {
     get size() {
-      return size;
+      return width;
+    },
+    get width() {
+      return width;
+    },
+    get height() {
+      return height;
     },
     get board() {
       return board;
@@ -177,7 +184,7 @@ export default function createGameboard(size = BOARD_SIZE) {
     availableCells,
     neighborsOf(x, y) {
       return DIRECTIONS.map(([dx, dy]) => ({ x: x + dx, y: y + dy })).filter((c) =>
-        inBounds(c.x, c.y, size),
+        inBounds(c.x, c.y, { width, height }),
       );
     },
   };

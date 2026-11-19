@@ -1,21 +1,18 @@
-import { COLS } from './constants.js';
+import { columnLabel, normalizeSize } from './constants.js';
 
 export const $ = (selector, root = document) => root.querySelector(selector);
 export const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-const LABELS = COLS.split('');
-
-/* ------------------------------------------------------------------ */
-/* Tableros                                                            */
-/* ------------------------------------------------------------------ */
-
-export function buildBoard(container) {
+export function buildBoard(container, size = 10) {
+  const { width, height } = normalizeSize(size);
   container.innerHTML = '';
   const grid = document.createElement('div');
   grid.className = 'board-grid';
+  grid.style.setProperty('--board-cols', String(width));
+  grid.style.setProperty('--board-rows', String(height));
 
-  for (let y = -1; y < 10; y += 1) {
-    for (let x = -1; x < 10; x += 1) {
+  for (let y = -1; y < height; y += 1) {
+    for (let x = -1; x < width; x += 1) {
       const el = document.createElement('div');
       if (x === -1 && y === -1) {
         el.className = 'board-grid__corner';
@@ -24,12 +21,12 @@ export function buildBoard(container) {
         el.textContent = String(y + 1);
       } else if (y === -1) {
         el.className = 'board-grid__label board-grid__label--col';
-        el.textContent = LABELS[x];
+        el.textContent = columnLabel(x);
       } else {
         el.className = 'cell';
         el.dataset.x = String(x);
         el.dataset.y = String(y);
-        el.dataset.coord = `${LABELS[x]}${y + 1}`;
+        el.dataset.coord = `${columnLabel(x)}${y + 1}`;
         const content = document.createElement('span');
         content.className = 'cell__content';
         el.appendChild(content);
@@ -44,6 +41,13 @@ export function buildBoard(container) {
 
 export const cellAt = (container, x, y) =>
   $(`.cell[data-x="${x}"][data-y="${y}"]`, container);
+
+export function updateSizePresets(size) {
+  $$('.size-preset').forEach((button) => {
+    const active = Number(button.dataset.cols) === size.width && Number(button.dataset.rows) === size.height;
+    button.classList.toggle('is-active', active);
+  });
+}
 
 function shipPartInfo(matrix, x, y) {
   const index = matrix[y][x].shipIndex;
@@ -67,7 +71,7 @@ const describeCell = (cell, revealShips) => {
   return 'sin explorar';
 };
 
-/** Pinta un tablero a partir de los datos del Gameboard. */
+
 export function renderBoard(container, matrix, { revealShips = false } = {}) {
   const grid = $('.board-grid', container) || buildBoard(container);
 
@@ -202,6 +206,8 @@ export function updateHud(state, viewer) {
 
 export function setScreen(id) {
   $$('.screen').forEach((screen) => screen.classList.toggle('screen--active', screen.id === id));
+  document.body.classList.toggle('screen-setup', id === 'screen-setup');
+  document.body.classList.toggle('screen-game', id === 'screen-game');
 }
 
 let toastTimer;

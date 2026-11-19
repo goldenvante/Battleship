@@ -1,5 +1,4 @@
-// Efectos sintetizados con WebAudio: sin archivos, sincronizados y ligeros.
-// Se activa con la primera interacción del usuario (política de autoplay).
+
 let context = null;
 let enabled = true;
 

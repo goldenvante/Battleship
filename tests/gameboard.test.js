@@ -74,6 +74,26 @@ describe('Gameboard', () => {
     expect(board.allShipsSunk()).toBe(true);
   });
 
+  test('respeta dimensiones personalizadas rectangulares', () => {
+    const board = createGameboard({ width: 8, height: 12 });
+    expect(board.width).toBe(8);
+    expect(board.height).toBe(12);
+    expect(board.board).toHaveLength(12);
+    expect(board.board[0]).toHaveLength(8);
+
+    expect(board.canPlaceShip([{ x: 8, y: 0 }, { x: 9, y: 0 }])).toBe(false);
+    expect(board.getCell(0, 12)).toBeNull();
+
+    const ship = createShip(5);
+    expect(board.placeShip(ship, [
+      { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 }, { x: 4, y: 0 },
+    ])).toBe(true);
+    // availableCells() cuenta casillas aún no disparadas, no casillas libres.
+    expect(board.availableCells()).toHaveLength(96);
+    expect(board.board.flat().filter((cell) => !cell.ship)).toHaveLength(96 - 5);
+    expect(board.neighborsOf(0, 11)).toHaveLength(2);
+  });
+
   test('placeShipsRandomly coloca toda la flota sin solapes', () => {
     const board = createGameboard();
     const placed = board.placeShipsRandomly([5, 4, 3, 3, 2]);

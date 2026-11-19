@@ -1,14 +1,11 @@
 import createGame from './modules/game.js';
-import { BOARD_SIZE } from './modules/constants.js';
+import { clampSize } from './modules/constants.js';
 import * as dom from './modules/dom.js';
 import { sound } from './modules/sound.js';
 
 const game = createGame();
 const { $, $$ } = dom;
 
-/* ------------------------------------------------------------------ */
-/* Estado de la interfaz                                               */
-/* ------------------------------------------------------------------ */
 
 let mode = 'cpu';
 let orientation = 'horizontal';
@@ -18,13 +15,15 @@ let setupBoard = null;
 let viewerKey = 'player1';
 let busy = false;
 
+
+const INPUT_LOCK_MS = 90;
+const CPU_DELAY_MS = 130;
+const HANDOFF_DELAY_MS = 300;
+
 const boardSetup = $('#placement-board');
 const boardOwn = $('#board-own');
 const boardEnemy = $('#board-enemy');
 
-dom.buildBoard(boardSetup);
-dom.buildBoard(boardOwn);
-dom.buildBoard(boardEnemy);
 const reticle = dom.createReticle($('.board-frame--enemy'));
 
 const readNames = () => ({
@@ -32,11 +31,28 @@ const readNames = () => ({
   player2: $('#name-p2').value.trim() || (mode === 'cpu' ? 'CPU' : 'Jugador 2'),
 });
 
+const readSize = () => {
+  const size = clampSize({
+    width: $('#board-cols').value,
+    height: $('#board-rows').value,
+  });
+  $('#board-cols').value = String(size.width);
+  $('#board-rows').value = String(size.height);
+  $('#size-readout').textContent = `${size.width} × ${size.height}`;
+  dom.updateSizePresets(size);
+  return size;
+};
+
+const buildBoards = (size) => {
+  dom.buildBoard(boardSetup, size);
+  dom.buildBoard(boardOwn, size);
+  dom.buildBoard(boardEnemy, size);
+  $('#size-readout').textContent = `${size.width} × ${size.height}`;
+};
+
 const activeViewer = () => (game.getState().mode === 'pvp' ? viewerKey : 'player1');
 
-/* ------------------------------------------------------------------ */
-/* Render                                                              */
-/* ------------------------------------------------------------------ */
+
 
 function renderSetup() {
   const state = game.getState();
@@ -73,6 +89,10 @@ function renderBattle() {
   const own = state.players[ownKey];
   const enemy = state.players[enemyKey];
 
+  if ($('.board-grid', boardOwn).children.length !== (state.size.width + 1) * (state.size.height + 1)) {
+    buildBoards(state.size);
+  }
+
   dom.renderBoard(boardOwn, own.board, { revealShips: true });
   dom.renderBoard(boardEnemy, enemy.board, { revealShips: false });
   dom.renderFleetPips($('#own-pips'), own.board);
@@ -92,16 +112,15 @@ function renderBattle() {
         : 'Esperando al oponente…';
 }
 
-/* ------------------------------------------------------------------ */
-/* Colocación de barcos                                                */
-/* ------------------------------------------------------------------ */
+
 
 function anchorCoords(anchor, length) {
+  const { width, height } = game.size;
   if (orientation === 'vertical') {
-    const y0 = Math.max(0, Math.min(anchor.y, BOARD_SIZE - length));
+    const y0 = Math.max(0, Math.min(anchor.y, height - length));
     return Array.from({ length }, (_, i) => ({ x: anchor.x, y: y0 + i }));
   }
-  const x0 = Math.max(0, Math.min(anchor.x, BOARD_SIZE - length));
+  const x0 = Math.max(0, Math.min(anchor.x, width - length));
   return Array.from({ length }, (_, i) => ({ x: x0 + i, y: anchor.y }));
 }
 
@@ -153,9 +172,7 @@ function toggleOrientation() {
   if (hoverAnchor) previewAt(hoverAnchor);
 }
 
-/* ------------------------------------------------------------------ */
-/* Flujo de turnos                                                     */
-/* ------------------------------------------------------------------ */
+
 
 function showTurnHandoff(playerKey) {
   const name = game.getState().players[playerKey].name;
@@ -193,7 +210,9 @@ function resetToSetup() {
   dom.clearLog();
   dom.hideOverlay();
   reticle.hide();
-  game.configure({ mode, names: readNames() });
+  const size = readSize();
+  buildBoards(size);
+  game.configure({ mode, names: readNames(), size });
   dom.setScreen('screen-setup');
   renderSetup();
 }
@@ -203,12 +222,10 @@ function toggleOrientationSilently() {
   $('#btn-rotate').classList.remove('is-vertical');
 }
 
-/* ------------------------------------------------------------------ */
-/* Eventos del modelo                                                  */
-/* ------------------------------------------------------------------ */
+
 
 game.on('ship:placed', () => {
-  // renderSetup se llama desde placeAt / randomizeFleet.
+  
 });
 
 game.on('handoff', ({ playerKey, purpose }) => {
@@ -240,18 +257,18 @@ game.on('game:started', () => {
 game.on('turn:changed', ({ current }) => {
   const state = game.getState();
   if (state.mode === 'pvp' && state.phase === 'playing') {
-    setTimeout(() => showTurnHandoff(current), 750);
+    setTimeout(() => showTurnHandoff(current), HANDOFF_DELAY_MS);
     return;
   }
   dom.updateHud(state, 'player1');
   if (state.phase === 'playing' && current === 'player2') {
-    setTimeout(runCpuTurn, 850);
+    setTimeout(runCpuTurn, CPU_DELAY_MS);
   } else if (state.phase === 'playing') {
     sound.turn();
   }
 });
 
-game.on('attack:resolved', async (payload) => {
+game.on('attack:resolved', (payload) => {
   busy = true;
   sound.fire();
 
@@ -269,7 +286,8 @@ game.on('attack:resolved', async (payload) => {
     ? (payload.shipCoords || []).map(({ x, y }) => ({ x, y, container: targetContainer }))
     : [];
 
-  await dom.fireAnimation(originEl, targetEl, hit ? 'hit' : 'miss', sunkCells);
+ 
+  renderBattle();
 
   if (hit && payload.sunk) {
     sound.sink();
@@ -280,6 +298,9 @@ game.on('attack:resolved', async (payload) => {
     sound.miss();
   }
 
+  
+  dom.fireAnimation(originEl, targetEl, hit ? 'hit' : 'miss', sunkCells);
+
   const label = targetEl ? targetEl.dataset.coord : '--';
   const attackerName = state.players[payload.attackerKey]?.name || '?';
   dom.addLogEntry(
@@ -287,8 +308,10 @@ game.on('attack:resolved', async (payload) => {
     hit ? 'hit' : 'miss',
   );
 
-  busy = false;
-  renderBattle();
+  setTimeout(() => {
+    busy = false;
+    renderBattle();
+  }, INPUT_LOCK_MS);
 });
 
 game.on('game:over', ({ winnerKey }) => {
@@ -321,12 +344,9 @@ game.on('game:over', ({ winnerKey }) => {
       primary: { label: 'Revancha', onClick: resetToSetup },
       secondary: { label: 'Ver tableros', onClick: () => dom.hideOverlay() },
     });
-  }, 950);
+  }, 550);
 });
 
-/* ------------------------------------------------------------------ */
-/* Eventos de la interfaz                                              */
-/* ------------------------------------------------------------------ */
 
 $$('.mode-card').forEach((card) => {
   card.addEventListener('click', () => {
@@ -448,10 +468,23 @@ boardEnemy.addEventListener('mouseleave', () => {
   $('#coord-readout').textContent = '--';
 });
 
-/* ------------------------------------------------------------------ */
-/* Arranque                                                            */
-/* ------------------------------------------------------------------ */
 
-game.configure({ mode, names: readNames() });
+const initialSize = readSize();
+buildBoards(initialSize);
+game.configure({ mode, names: readNames(), size: initialSize });
 dom.setScreen('screen-setup');
 renderSetup();
+
+// El tamaño se aplica al instante desde la pantalla de inicio.
+['#board-cols', '#board-rows'].forEach((selector) => {
+  $(selector).addEventListener('change', () => resetToSetup());
+});
+
+$$('.size-preset').forEach((button) => {
+  button.addEventListener('click', () => {
+    $('#board-cols').value = String(button.dataset.cols);
+    $('#board-rows').value = String(button.dataset.rows);
+    resetToSetup();
+    sound.ui();
+  });
+});

@@ -8,11 +8,11 @@
     <link rel="stylesheet" href="./src/css/style.css" />
   </head>
   <body>
-    <!-- Fondo placeholder: sustituye estos SVG/CSS por tus fondos definitivos -->
+    <!-- Fondos: inicio.jpg en batalla, lobby.jpg en la pantalla de despliegue -->
     <div class="ocean" aria-hidden="true">
-      <div class="ocean__layer ocean__layer--deep"></div>
-      <div class="ocean__layer ocean__layer--waves"></div>
-      <div class="ocean__layer ocean__layer--caustics"></div>
+      <div class="ocean__photo ocean__photo--battle"></div>
+      <div class="ocean__photo ocean__photo--lobby"></div>
+      <div class="ocean__tint"></div>
       <div class="ocean__glow"></div>
     </div>
     <div class="scanlines" aria-hidden="true"></div>
@@ -76,6 +76,26 @@
               <div class="names-row is-hidden">
                 <label>Jugador 1 <input id="name-p1" type="text" maxlength="14" value="Jugador 1" /></label>
                 <label>Jugador 2 <input id="name-p2" type="text" maxlength="14" value="Jugador 2" /></label>
+              </div>
+
+              <div class="size-section">
+                <div class="section-heading">
+                  <h3>Tamaño del tablero</h3>
+                  <span id="size-readout">10 × 10</span>
+                </div>
+                <div class="size-inputs">
+                  <label>Columnas <input id="board-cols" type="number" min="5" max="20" value="10" /></label>
+                  <span class="size-inputs__x">×</span>
+                  <label>Filas <input id="board-rows" type="number" min="5" max="20" value="10" /></label>
+                </div>
+                <div class="size-presets" role="group" aria-label="Tamaños rápidos">
+                  <button class="size-preset is-active" type="button" data-cols="10" data-rows="10">10 × 10</button>
+                  <button class="size-preset" type="button" data-cols="8" data-rows="8">8 × 8</button>
+                  <button class="size-preset" type="button" data-cols="8" data-rows="12">8 × 12</button>
+                  <button class="size-preset" type="button" data-cols="12" data-rows="8">12 × 8</button>
+                  <button class="size-preset" type="button" data-cols="12" data-rows="12">12 × 12</button>
+                </div>
+                <p class="size-note">Mínimo 5 × 5 (el barco más grande mide 5).</p>
               </div>
 
               <div class="fleet-section">

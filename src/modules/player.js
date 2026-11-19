@@ -1,19 +1,9 @@
 import createGameboard from './gameboard.js';
-import { coordKey, inBounds, BOARD_SIZE } from './constants.js';
+import { coordKey } from './constants.js';
 
-/**
- * Fábrica de jugadores.
- * Interface pública: name, isComputer, gameboard,
- *   getAttack(enemyBoard), notifyAttack(...), resetMemory()
- *
- * La computadora implementa una IA "caza y destruye":
- * dispara al azar hasta obtener un impacto, entonces prueba las casillas
- * adyacentes hasta hundir la nave. Nunca repite una coordenada.
- */
-export default function createPlayer(name, { isComputer = false, smart = true } = {}) {
-  const gameboard = createGameboard();
+export default function createPlayer(name, { isComputer = false, smart = true, size } = {}) {
+  const gameboard = createGameboard(size);
 
-  // Memoria de la IA (sólo se usa para jugadores controlados por ordenador).
   let hits = [];
   let queue = [];
 
@@ -36,11 +26,11 @@ export default function createPlayer(name, { isComputer = false, smart = true } 
     }
   };
 
-  /** Devuelve una coordenada legal (nunca disparada dos veces). */
+  
   const getAttack = (enemyBoard) => {
     if (!enemyBoard) return null;
 
-    // Descartar objetivo de la cola que ya fue disparado.
+    
     while (queue.length && isAttacked(enemyBoard, queue[0].x, queue[0].y)) {
       queue.shift();
     }
@@ -49,7 +39,7 @@ export default function createPlayer(name, { isComputer = false, smart = true } 
     if (smart && isComputer && hits.length) {
       const candidates = [];
       for (const hit of hits) {
-        // Ignorar impactos de barcos ya hundidos.
+        
         const cell = enemyBoard.getCell(hit.x, hit.y);
         if (cell && cell.shipSunk) continue;
         for (const neighbor of enemyBoard.neighborsOf(hit.x, hit.y)) {
@@ -71,7 +61,7 @@ export default function createPlayer(name, { isComputer = false, smart = true } 
     return available[Math.floor(Math.random() * available.length)];
   };
 
-  /** Informa a la IA del resultado para actualizar su memoria. */
+
   const notifyAttack = ({ coordinate, result, sunk, enemyBoard }) => {
     if (!isComputer || !smart || !coordinate || result === 'miss' || result === 'invalid') return;
 

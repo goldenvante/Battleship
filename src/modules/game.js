@@ -3,16 +3,12 @@ import createPlayer from './player.js';
 import {
   FLEET,
   FLEET_LENGTHS,
-  BOARD_SIZE,
+  clampSize,
 } from './constants.js';
 
-/**
- * Controlador del juego: turnos, fase, victoria y colocación.
- * Expone un pequeño bus de eventos para que la capa DOM reaccione sin
- * conocer las reglas. Toda la lógica se prueba sin tocar el DOM.
- */
 export default function createGame() {
   let mode = 'cpu';
+  let size = clampSize(10);
   let phase = 'idle'; // idle | placement | playing | gameover
   let players = {};
   let fleets = {};
@@ -42,16 +38,17 @@ export default function createGame() {
   const freshFleet = () =>
     FLEET.map((entry) => ({ ...entry, placed: false, coords: null }));
 
-  const configure = ({ mode: nextMode = 'cpu', names: nextNames } = {}) => {
+  const configure = ({ mode: nextMode = 'cpu', names: nextNames, size: nextSize } = {}) => {
     mode = nextMode === 'pvp' ? 'pvp' : 'cpu';
+    if (nextSize !== undefined) size = clampSize(nextSize);
     names = {
       player1: nextNames?.player1 || 'Jugador 1',
       player2: nextNames?.player2 || (mode === 'cpu' ? 'CPU' : 'Jugador 2'),
     };
 
     players = {
-      player1: createPlayer(names.player1),
-      player2: createPlayer(names.player2, { isComputer: mode === 'cpu', smart: true }),
+      player1: createPlayer(names.player1, { size }),
+      player2: createPlayer(names.player2, { isComputer: mode === 'cpu', smart: true, size }),
     };
 
     fleets = { player1: freshFleet(), player2: freshFleet() };
@@ -68,7 +65,7 @@ export default function createGame() {
     winner = null;
     round = 1;
 
-    emit('configured', { mode, placingFor, names: { ...names } });
+    emit('configured', { mode, placingFor, names: { ...names }, size: { ...size } });
     return true;
   };
 
@@ -212,9 +209,9 @@ export default function createGame() {
     const player = players[key];
     if (!player) return null;
     const board = [];
-    for (let y = 0; y < BOARD_SIZE; y += 1) {
+    for (let y = 0; y < size.height; y += 1) {
       board.push(
-        Array.from({ length: BOARD_SIZE }, (_, x) => player.gameboard.getCell(x, y)),
+        Array.from({ length: size.width }, (_, x) => player.gameboard.getCell(x, y)),
       );
     }
     return {
@@ -233,6 +230,7 @@ export default function createGame() {
     winner,
     round,
     placingFor,
+    size: { ...size },
     players: {
       player1: serializePlayer('player1'),
       player2: serializePlayer('player2'),
@@ -255,6 +253,9 @@ export default function createGame() {
     computerTurn,
     getState,
     opponent,
+    get size() {
+      return { ...size };
+    },
     get current() {
       return current;
     },
